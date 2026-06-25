@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ClearProcess — AI-Powered Claims Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { box-shadow: none; margin: 0; }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background: #e8edf5;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .page {
+    width: 277mm;
+    min-height: 190mm;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+    padding: 22px 26px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 12px;
+  }
+  .header-left h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a2744;
+    letter-spacing: -0.5px;
+  }
+  .header-left p {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+  .header-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #475569;
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── FLOW CONTAINER ── */
+  .flow-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    position: relative;
+  }
+
+  /* ── PHASE BLOCK ── */
+  .phase {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .phase-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  .stage-box {
+    width: 100%;
+    border-radius: 8px;
+    padding: 8px 7px;
+    text-align: center;
+    position: relative;
+    min-height: 54px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .stage-box.apertura  { background: #1e3a5f; color: #fff; }
+  .stage-box.triage    { background: #1d4ed8; color: #fff; }
+  .stage-box.decision  { background: #2563eb; color: #fff; }
+  .stage-box.intake    { background: #0369a1; color: #fff; }
+  .stage-box.inspeccion{ background: #0284c7; color: #fff; }
+  .stage-box.wo        { background: #0891b2; color: #fff; }
+  .stage-box.reconcil  { background: #0e7490; color: #fff; }
+  .stage-box.reparacion{ background: #047857; color: #fff; }
+  .stage-box.retiro    { background: #059669; color: #fff; }
+  .stage-box.factura   { background: #d97706; color: #fff; }
+  .stage-box.completado{ background: #15803d; color: #fff; }
+
+  .stage-icon { font-size: 16px; margin-bottom: 2px; }
+  .stage-name {
+    font-size: 9.5px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: 0.1px;
+  }
+  .stage-trigger {
+    font-size: 7.5px;
+    font-weight: 400;
+    opacity: 0.82;
+    margin-top: 2px;
+    line-height: 1.2;
+  }
+
+  /* ── ARROW ── */
+  .arrow {
+    display: flex;
+    align-items: center;
+    padding-top: 27px;
+    color: #94a3b8;
+    font-size: 18px;
+    flex-shrink: 0;
+    width: 18px;
+    justify-content: center;
+  }
+
+  /* ── AI AGENT BADGE ── */
+  .ai-badge {
+    margin-top: 7px;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff;
+    border-radius: 20px;
+    padding: 3px 7px;
+    font-size: 7.5px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.2px;
+    box-shadow: 0 2px 6px rgba(249,115,22,0.35);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+    justify-content: center;
+  }
+  .ai-badge::before {
+    content: '🤖';
+    font-size: 9px;
+  }
+
+  .ai-badge.disabled-notif {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    opacity: 0.6;
+    box-shadow: none;
+  }
+
+  /* ── KPI STRIP ── */
+  .kpi-strip {
+    margin-top: 6px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 7px;
+    color: #c2410c;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+  }
+
+  /* ── BOTTOM SECTION ── */
+  .bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    border-top: 2px solid #e2e8f0;
+    padding-top: 12px;
+  }
+
+  .improvements-box {
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .improvements-box h3 {
+    font-size: 10px;
+    font-weight: 700;
+    color: #15803d;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .before-after {
+    background: #eff6ff;
+    border: 1.5px solid #93c5fd;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .before-after h3 {
+    font-size: 10px;
+    font-weight: 700;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+  }
+  .ba-col-header {
+    font-size: 8.5px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .ba-item {
+    font-size: 8px;
+    color: #475569;
+    padding: 1.5px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    line-height: 1.3;
+  }
+  .ba-item.bad  { color: #dc2626; }
+  .ba-item.good { color: #15803d; }
+  .ba-item::before { flex-shrink: 0; font-size: 9px; }
+  .ba-item.bad::before  { content: '✗'; }
+  .ba-item.good::before { content: '✓'; }
+
+  .improvement-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+    font-size: 8px;
+    color: #166534;
+    padding: 2px 0;
+    line-height: 1.35;
+  }
+  .improvement-row::before {
+    content: '→';
+    font-weight: 700;
+    color: #22c55e;
+    flex-shrink: 0;
+  }
+
+  .customer-box {
+    margin-top: 6px;
+    background: #fdf4ff;
+    border: 1.5px solid #d8b4fe;
+    border-radius: 6px;
+    padding: 5px 8px;
+  }
+  .customer-box h4 {
+    font-size: 9px;
+    font-weight: 700;
+    color: #7e22ce;
+    margin-bottom: 3px;
+  }
+  .customer-box p {
+    font-size: 7.5px;
+    color: #6b21a8;
+    line-height: 1.4;
+  }
+
+  /* ── CUSTOMER TIMELINE STRIP ── */
+  .customer-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #fdf4ff;
+    border: 1.5px solid #d8b4fe;
+    border-radius: 6px;
+    padding: 5px 8px;
+    margin-top: 7px;
+  }
+  .cs-label {
+    font-size: 7.5px;
+    font-weight: 700;
+    color: #7e22ce;
+    white-space: nowrap;
+    margin-right: 8px;
+    min-width: 55px;
+  }
+  .cs-stages {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+  }
+  .cs-stage {
+    font-size: 7.5px;
+    font-weight: 600;
+    color: #7e22ce;
+    background: #ede9fe;
+    border-radius: 4px;
+    padding: 2px 5px;
+    white-space: nowrap;
+  }
+  .cs-arrow {
+    color: #a855f7;
+    font-size: 10px;
+    padding: 0 3px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>⚡ ClearProcess — AI-Powered Auto Claims Management</h1>
+      <p>End-to-end automation platform for auto insurance claims processing · Zurich Hackathon 2026</p>
+    </div>
+    <div class="header-right">
+      <div class="legend-item"><div class="legend-dot" style="background:#1e3a5f"></div> Process stage</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div> AI agent active</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c2410c"></div> SLA / KPI</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7e22ce"></div> Customer view</div>
+    </div>
+  </div>
+
+  <!-- MAIN FLOW -->
+  <div class="flow-container">
+
+    <!-- 1. FNOL -->
+    <div class="phase">
+      <div class="phase-label">Filing</div>
+      <div class="stage-box apertura">
+        <div class="stage-icon">📋</div>
+        <div class="stage-name">Claim Filing (FNOL)</div>
+        <div class="stage-trigger">Customer / Adjuster uploads documents</div>
+      </div>
+      <div class="kpi-strip">Notice date recorded</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 2. TRIAGE -->
+    <div class="phase">
+      <div class="phase-label">Triage</div>
+      <div class="stage-box triage">
+        <div class="stage-icon">🔍</div>
+        <div class="stage-name">Claim Triage</div>
+        <div class="stage-trigger">Automatic analysis vs. policy</div>
+      </div>
+      <div class="ai-badge">FNOLTriageAgent · Confidence + decision</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 3. DECISION -->
+    <div class="phase">
+      <div class="phase-label">Decision</div>
+      <div class="stage-box decision">
+        <div class="stage-icon">⚖️</div>
+        <div class="stage-name">Adjuster Decision</div>
+        <div class="stage-trigger">Approve / Reject / Request docs</div>
+      </div>
+      <div class="kpi-strip">SLA: Decision within deadline</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 4. INTAKE -->
+    <div class="phase">
+      <div class="phase-label">Intake</div>
+      <div class="stage-box intake">
+        <div class="stage-icon">🏪</div>
+        <div class="stage-name">Workshop Intake</div>
+        <div class="stage-trigger">Vehicle marked as received</div>
+      </div>
+      <div class="kpi-strip">SLA: 240h maximum</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 5. INSPECCION -->
+    <div class="phase">
+      <div class="phase-label">Inspection</div>
+      <div class="stage-box inspeccion">
+        <div class="stage-icon">📸</div>
+        <div class="stage-name">Damage Inspection</div>
+        <div class="stage-trigger">Photos + workshop notes uploaded</div>
+      </div>
+      <div class="kpi-strip">SLA: 48h maximum</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 6. WORK ORDER -->
+    <div class="phase">
+      <div class="phase-label">Work Order</div>
+      <div class="stage-box wo">
+        <div class="stage-icon">📝</div>
+        <div class="stage-name">Work Order Creation</div>
+        <div class="stage-trigger">Auto-generated from photos</div>
+      </div>
+      <div class="ai-badge">WorkOrderDraftAgent · Line items + recommendations</div>
+      <div class="kpi-strip">SLA: WO within 120h</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 7. RECONCILIACION -->
+    <div class="phase">
+      <div class="phase-label">Budget</div>
+      <div class="stage-box reconcil">
+        <div class="stage-icon">🔄</div>
+        <div class="stage-name">Budget Reconciliation</div>
+        <div class="stage-trigger">Workshop uploads budget PDF</div>
+      </div>
+      <div class="ai-badge">WorkOrderReconciliationAgent · Fuzzy match</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 8. REPARACION -->
+    <div class="phase">
+      <div class="phase-label">Repair</div>
+      <div class="stage-box reparacion">
+        <div class="stage-icon">🔧</div>
+        <div class="stage-name">Repair in Progress</div>
+        <div class="stage-trigger">Adjuster approves WO and starts repair</div>
+      </div>
+      <div class="kpi-strip">SLA: WO closure within 240h</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 9. RETIRO -->
+    <div class="phase">
+      <div class="phase-label">Pickup</div>
+      <div class="stage-box retiro">
+        <div class="stage-icon">🚗</div>
+        <div class="stage-name">Vehicle Pickup</div>
+        <div class="stage-trigger">Customer satisfaction receipt uploaded</div>
+      </div>
+      <div class="kpi-strip">SLA: 24h post-repair</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 10. FACTURA -->
+    <div class="phase">
+      <div class="phase-label">Billing</div>
+      <div class="stage-box factura">
+        <div class="stage-icon">💰</div>
+        <div class="stage-name">Invoice Verification</div>
+        <div class="stage-trigger">Workshop uploads final invoice</div>
+      </div>
+      <div class="ai-badge">BillComparisonAgent · Discrepancy detection</div>
+    </div>
+
+    <div class="arrow">›</div>
+
+    <!-- 11. COMPLETADO -->
+    <div class="phase">
+      <div class="phase-label">Closed</div>
+      <div class="stage-box completado">
+        <div class="stage-icon">✅</div>
+        <div class="stage-name">Claim Completed</div>
+        <div class="stage-trigger">Invoice approved · Case closed</div>
+      </div>
+      <div class="kpi-strip">Closure date recorded</div>
+    </div>
+
+  </div>
+
+  <!-- CUSTOMER STRIP -->
+  <div class="customer-strip">
+    <span class="cs-label">👤 Customer View:</span>
+    <div class="cs-stages">
+      <span class="cs-stage">Claim Filing</span>
+      <span class="cs-arrow">›</span>
+      <span class="cs-stage">Workshop (Intake · Inspection · Repair · Pickup)</span>
+      <span class="cs-arrow">›</span>
+      <span class="cs-stage">Claim Completed</span>
+    </div>
+    <span style="font-size:7.5px; color:#7e22ce; margin-left:8px; font-style:italic;">Self-service portal with document upload and real-time status tracking</span>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom">
+
+    <!-- IMPROVEMENTS -->
+    <div class="improvements-box">
+      <h3>🚀 Key improvements introduced by ClearProcess</h3>
+      <div class="improvement-row">AI triage in seconds: coverage decision with confidence score and matched clauses — previously hours of manual policy review</div>
+      <div class="improvement-row">Defined SLAs at every stage with automatic tracking — previously no visibility into per-stage processing times</div>
+      <div class="improvement-row">Work Order auto-generated from inspection photos by AI — previously the adjuster built it manually line by line</div>
+      <div class="improvement-row">Automatic budget reconciliation: AI fuzzy-matches workshop quote against approved WO — previously done manually and error-prone</div>
+      <div class="improvement-row">AI invoice verification: detects unapproved items, cost overruns and discrepancies automatically before payment</div>
+      <div class="improvement-row">Real-time customer portal: policyholder tracks status, uploads documents and receives updates — previously phone and email only</div>
+      <div class="improvement-row">Full process staging: every stage has defined inputs, outputs and owners — previously the workflow was informal and undocumented</div>
+    </div>
+
+    <!-- BEFORE / AFTER -->
+    <div class="before-after">
+      <h3>📊 Traditional process vs. ClearProcess</h3>
+      <div class="ba-grid">
+        <div>
+          <div class="ba-col-header">❌ Traditional process (today)</div>
+          <div class="ba-item bad">No triage — adjuster reads policy documents manually</div>
+          <div class="ba-item bad">No staging — process advances informally with no structure</div>
+          <div class="ba-item bad">No SLAs — no visibility into time spent at each stage</div>
+          <div class="ba-item bad">Work Order built manually — hours of adjuster time per claim</div>
+          <div class="ba-item bad">Budget compared manually — frequent errors and overcharges</div>
+          <div class="ba-item bad">No customer portal — all communication via phone and email</div>
+          <div class="ba-item bad">Invoice reviewed manually — no anomaly detection before payment</div>
+        </div>
+        <div>
+          <div class="ba-col-header">✓ ClearProcess with AI</div>
+          <div class="ba-item good">FNOLTriageAgent: coverage decision + confidence score in seconds</div>
+          <div class="ba-item good">10 defined stages with inputs, outputs and clear ownership</div>
+          <div class="ba-item good">Automatic KPIs: SLA alerts triggered at every stage transition</div>
+          <div class="ba-item good">WorkOrderDraftAgent: full WO from workshop photos in minutes</div>
+          <div class="ba-item good">WorkOrderReconciliationAgent: AI fuzzy-matches budget vs. WO</div>
+          <div class="ba-item good">Self-service portal: real-time status, document upload, notifications</div>
+          <div class="ba-item good">BillComparisonAgent: flags unapproved items and cost discrepancies</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
